@@ -1,4 +1,4 @@
-package api
+package main
 
 // NewClient returns a new greenfield client
 import (
@@ -6,7 +6,7 @@ import (
 )
 
 func NewClient(chainID string, endpoint string) client.IClient {
-	cli, err := client.NewClient(chainID, endpoint)
+	cli, err := client.New(chainID, endpoint, client.Option{})
 	if err != nil {
 		panic(err)
 	}

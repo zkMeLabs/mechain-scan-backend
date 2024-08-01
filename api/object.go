@@ -1,12 +1,14 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
+	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/gin-gonic/gin"
 )
 
-type ObjectInfo struct {
+type objectInfo struct {
 	// creator is the address of the uploader, it always be same as owner address
 	Creator string `json:"creator,omitempty"`
 	// object_name is the name of object
@@ -24,7 +26,43 @@ type ObjectInfo struct {
 	BucketName string `json:"bucket_name,omitempty"`
 }
 
-func GetObjects(c *gin.Context) {
-	groups := make([]GroupInfo, 0)
-	c.JSON(http.StatusOK, groups)
+func (a *API) GetObjects(c *gin.Context) {
+	status, objects := http.StatusOK, make([]objectInfo, 0)
+	defer func() {
+		c.JSON(status, objects)
+	}()
+	bucketName := "mechain" // todo
+	var continuationToken string
+	for {
+		listResult, err := a.cli.ListObjects(c, bucketName, sdktypes.ListObjectsOptions{
+			ShowRemovedObject: false,
+			MaxKeys:           defaultMaxKey,
+			ContinuationToken: continuationToken,
+			Prefix:            "",
+		})
+		if err != nil {
+			log.Println(err.Error())
+		}
+
+		for _, o := range listResult.Objects {
+			objects = append(objects, toObjectInfo(o))
+		}
+		if !listResult.IsTruncated {
+			break
+		}
+		continuationToken = listResult.NextContinuationToken
+	}
+}
+
+func toObjectInfo(obj *sdktypes.ObjectMeta) objectInfo {
+	return objectInfo{
+		Creator:     obj.ObjectInfo.Creator,
+		ObjectName:  obj.ObjectInfo.ObjectName,
+		ContentType: obj.ObjectInfo.ContentType,
+		PayloadSize: obj.ObjectInfo.PayloadSize,
+		Status:      obj.ObjectInfo.ObjectStatus.String(),
+		Visibility:  obj.ObjectInfo.Visibility.String(),
+		UpdatedAt:   obj.ObjectInfo.UpdatedAt,
+		BucketName:  obj.ObjectInfo.BucketName,
+	}
 }

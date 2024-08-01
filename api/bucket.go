@@ -1,55 +1,63 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
+	sdktypes "github.com/bnb-chain/greenfield-go-sdk/types"
 	"github.com/gin-gonic/gin"
+	"github.com/rs/zerolog/log"
 )
 
-type BucketInfo struct {
-	// owner is the account address of bucket creator, it is also the bucket owner.
-	Owner string `json:"owners"`
-	// bucket_name is a globally unique name of bucket
-	Name string `json:"name"`
-	// id is the unique identification for bucket.
-	ID uint `json:"id"`
-	// create_at define the block timestamp when the bucket created.
-	CreateAt          int64  `json:"create_at"`
+type bucketInfo struct {
+	Name              string `json:"name"`
+	ID                string `json:"id"`
+	LastUpdateTime    int64  `json:"last_update_at"`
+	Owner             string `json:"owners"`
 	Status            string `json:"status"`
 	ActiveObjectCount uint   `json:"active_object_count"`
 }
 
-func GetBuckets(c *gin.Context) {
-	// c, cancelCreateBucket := context.WithCancel(c.Request.Context())
-	// defer cancelCreateBucket()
+func (a *API) GetBuckets(c *gin.Context) {
+	status, buckets := http.StatusOK, make([]bucketInfo, 0)
+	defer func() {
+		c.JSON(status, buckets)
+	}()
 
-	// spInfo, err := client.ListStorageProviders(c, true)
-	// if err != nil {
-	// 	fmt.Println("fail to get SP info to list bucket:", err.Error())
-	// 	return nil
-	// }
+	ctx, cancelCreateBucket := context.WithCancel(context.Background())
+	defer cancelCreateBucket()
 
-	// bucketListRes, err := client.ListBuckets(c, sdktypes.ListBucketsOptions{
-	// 	ShowRemovedBucket: false,
-	// 	Endpoint:          spInfo[0].Endpoint,
-	// })
-	// if err != nil {
-	// 	return err
-	// }
+	spInfo, err := a.cli.ListStorageProviders(ctx, true)
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
 
-	// if len(bucketListRes.Buckets) == 0 {
-	// 	return nil
-	// }
+	bucketListRes, err := a.cli.ListBuckets(ctx, sdktypes.ListBucketsOptions{
+		ShowRemovedBucket: false,
+		Endpoint:          spInfo[0].Endpoint,
+	})
+	if err != nil {
+		log.Printf(err.Error())
+		return
+	}
 
-	// for _, bucket := range bucketListRes.Buckets {
-	// 	info := bucket.BucketInfo
+	if len(bucketListRes.Buckets) == 0 {
+		return
+	}
 
-	// 	location, _ := time.LoadLocation("Asia/Shanghai")
-	// 	t := time.Unix(info.CreateAt, 0).In(location)
-	// 	if !bucket.Removed {
-	// 		fmt.Printf("%s  %s\n", t.Format(iso8601DateFormat), info.BucketName)
-	// 	}
-	// }
-	buckets := make([]BucketInfo, 0)
-	c.JSON(http.StatusOK, buckets)
+	for _, bucket := range bucketListRes.Buckets {
+		buckets = append(buckets, toBucketInfo(bucket))
+	}
+}
+
+func toBucketInfo(b *sdktypes.BucketMetaWithVGF) bucketInfo {
+	return bucketInfo{
+		Name:              b.BucketInfo.BucketName,
+		ID:                b.BucketInfo.Id.String(),
+		LastUpdateTime:    b.UpdateTime,
+		Owner:             b.BucketInfo.Owner,
+		Status:            b.BucketInfo.BucketStatus.String(),
+		ActiveObjectCount: 0, // todo
+	}
 }
