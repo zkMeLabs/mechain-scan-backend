@@ -5,6 +5,7 @@ go 1.22.5
 require (
 	github.com/gin-gonic/gin v1.10.0
 	github.com/urfave/cli/v2 v2.27.3
+	github.com/bnb-chain/greenfield-go-sdk v1.6.0
 )
 
 require (
@@ -38,4 +39,8 @@ require (
 	golang.org/x/text v0.15.0 // indirect
 	google.golang.org/protobuf v1.34.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
+)
+
+replace (
+	github.com/bnb-chain/greenfield-go-sdk => github.com/zkMeLabs/mechain-go-sdk v0.0.0-20240722095906-2c55c3533f05
 )

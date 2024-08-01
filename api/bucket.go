@@ -10,12 +10,12 @@ type BucketInfo struct {
 	// owner is the account address of bucket creator, it is also the bucket owner.
 	Owner string `json:"owners"`
 	// bucket_name is a globally unique name of bucket
-	Name string `json:"bucket_name"`
+	Name string `json:"name"`
 	// id is the unique identification for bucket.
 	ID uint `json:"id"`
 	// create_at define the block timestamp when the bucket created.
 	CreateAt          int64  `json:"create_at"`
-	Status            string `json:"bucket_status"`
+	Status            string `json:"status"`
 	ActiveObjectCount uint   `json:"active_object_count"`
 }
 
