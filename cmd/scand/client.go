@@ -6,5 +6,9 @@ import (
 )
 
 func NewClient(chainID string, endpoint string) client.IClient {
-	return nil
+	cli, err := client.New(chainID, endpoint, client.Option{})
+	if err != nil {
+		panic(err)
+	}
+	return cli
 }
