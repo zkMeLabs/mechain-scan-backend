@@ -1,0 +1,10 @@
+package main
+
+// NewClient returns a new greenfield client
+import (
+	"github.com/bnb-chain/greenfield-go-sdk/client"
+)
+
+func NewClient(chainID string, endpoint string) client.IClient {
+	return nil
+}

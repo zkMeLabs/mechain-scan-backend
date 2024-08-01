@@ -1,3 +1,6 @@
+
+.PHONY: build
+
 VERSION=$(shell git describe --tags)
 GIT_COMMIT=$(shell git rev-parse HEAD)
 GIT_COMMIT_DATE=$(shell git log -n1 --pretty='format:%cd' --date=format:'%Y%m%d')
@@ -9,25 +12,8 @@ ldflags = -X $(REPO)/version.AppVersion=$(VERSION) \
           -X $(REPO)/version.GitCommitDate=$(GIT_COMMIT_DATE)
 
 build:
-ifeq ($(OS),Windows_NT)
-	go build -o build/mechain-scanner.exe -ldflags="$(ldflags)" main.go
-else
-	go build -o build/mechain-scanner -ldflags="$(ldflags)" main.go
-endif
-
-install:
-ifeq ($(OS),Windows_NT)
-	go install main.go
-else
-	go install main.go
-endif
-
-build_docker:
-	docker build . -t ${IMAGE_NAME}
-
-.PHONY: build install build_docker
-
-
+	go build -o build/scand cmd/scand/*.go
+ 
 ###############################################################################
 ###                                Linting                                  ###
 ###############################################################################
